@@ -3,53 +3,47 @@
 #include <climits>
 using namespace std;
 
-// Helper to find max crossing subarray
-int findMaxCrossingSubarray(const vector<int>& A, int low, int mid, int high) {
-    int left_sum = INT_MIN;
+int findMaxCrossingSubarray(vector<int>& arr, int low, int mid, int high) {
+    int leftSum = INT_MIN;
     int sum = 0;
     for (int i = mid; i >= low; i--) {
-        sum += A[i];
-        if (sum > left_sum) {
-            left_sum = sum;
+        sum += arr[i];
+        if (sum > leftSum) {
+            leftSum = sum;
         }
     }
-
-    int right_sum = INT_MIN;
+    int rightSum = INT_MIN;
     sum = 0;
     for (int j = mid + 1; j <= high; j++) {
-        sum += A[j];
-        if (sum > right_sum) {
-            right_sum = sum;
+        sum += arr[j];
+        if (sum > rightSum) {
+            rightSum = sum;
         }
     }
-
-    return left_sum + right_sum;
+    return leftSum + rightSum;
 }
 
-// Divide-and-conquer max subarray
-int findMaximumSubarray(const vector<int>& A, int low, int high) {
+int findMaximumSubarray(vector<int>& arr, int low, int high) {
     if (low == high) {
-        return A[low]; // base case: single element
+        return arr[low];
     }
-
     int mid = (low + high) / 2;
 
-    int left_sum = findMaximumSubarray(A, low, mid);
-    int right_sum = findMaximumSubarray(A, mid + 1, high);
-    int cross_sum = findMaxCrossingSubarray(A, low, mid, high);
+    int leftSum = findMaximumSubarray(arr, low, mid);
+    int rightSum = findMaximumSubarray(arr, mid + 1, high);
+    int crossSum = findMaxCrossingSubarray(arr, low, mid, high);
 
-    return max({left_sum, right_sum, cross_sum});
+    return max({leftSum, rightSum, crossSum});
 }
 
 int main() {
     int n;
     cin >> n;
-    vector<int> A(n);
+    vector<int> arr(n);
     for (int i = 0; i < n; i++) {
-        cin >> A[i];
+        cin >> arr[i];
     }
-
-    int result = findMaximumSubarray(A, 0, n - 1);
+    int result = findMaximumSubarray(arr, 0, n - 1);
     cout << result;
     return 0;
 }
