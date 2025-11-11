@@ -1,66 +1,76 @@
 #include <iostream>
 #include <vector>
-#include <stack>
 #include <algorithm>
 using namespace std;
 
-void dfs1(int u, vector<vector<int>> &graph, vector<bool> &visited, stack<int> &st) {
-    visited[u] = true;
-    for (int v : graph[u])
-        if (!visited[v])
-            dfs1(v, graph, visited, st);
-    st.push(u);
+void dfs(int currV, vector<vector<int>> &graph, vector<bool> &visited, vector<int> &endOrder){
+    visited[currV] = true;
+    for (int i = 0; i < graph[currV].size(); i++){
+        int nextV = graph[currV][i];
+        if (!visited[nextV]) {
+            dfs(nextV, graph, visited, endOrder);
+        }
+    }
+    endOrder.push_back(currV);
 }
 
-void dfs2(int u, vector<vector<int>> &rev_graph, vector<bool> &visited, vector<int> &component) {
-    visited[u] = true;
-    component.push_back(u);
-    for (int v : rev_graph[u])
-        if (!visited[v])
-            dfs2(v, rev_graph, visited, component);
+void dfsFlipped(int currV, vector<vector<int>> &flippedGraph, vector<bool> &visited, vector<int> &currSCC){
+    visited[currV] = true;
+    currSCC.push_back(currV);
+    for (int i = 0; i < flippedGraph[currV].size(); i++){
+        int nextV = flippedGraph[currV][i];
+        if (!visited[nextV]) {
+            dfsFlipped(nextV, flippedGraph, visited, currSCC);
+        }
+    }
 }
 
 int main() {
-    int V, E;
-    cin >> V >> E;
+    int numV, numE;
+    cin >> numV >> numE;
+    vector<vector<int>> graph(numV);
+    
+    vector<vector<int>> flippedGraph(numV);
 
-    vector<vector<int>> graph(V), rev_graph(V);
-    for (int i = 0; i < E; i++) {
-        int u, v;
-        cin >> u >> v;
-        graph[u].push_back(v);
-        rev_graph[v].push_back(u);
+    for (int i = 0; i < numE; i++){
+        int startV, endV;
+        cin >> startV >> endV;
+        graph[startV].push_back(endV);
+        flippedGraph[endV].push_back(startV);
     }
 
-    vector<bool> visited(V, false);
-    stack<int> st;
+    vector<bool> visited(numV, false);
+    vector<int> endOrder;
 
-    // Step 1: DFS to fill stack by finishing times
-    for (int i = 0; i < V; i++)
-        if (!visited[i])
-            dfs1(i, graph, visited, st);
-
-    fill(visited.begin(), visited.end(), false);
-    vector<int> scc_id(V);
-
-    // Step 2: DFS on reversed graph
-    while (!st.empty()) {
-        int node = st.top();
-        st.pop();
-        if (!visited[node]) {
-            vector<int> component;
-            dfs2(node, rev_graph, visited, component);
-
-            // Find the smallest index in this SCC
-            int min_vertex = *min_element(component.begin(), component.end());
-            for (int v : component)
-                scc_id[v] = min_vertex;
+    for (int i = 0; i < numV; i++){
+        if (!visited[i]) {
+            dfs(i, graph, visited, endOrder);
         }
     }
 
-    // Output SCC IDs
-    for (int i = 0; i < V; i++)
-        cout << scc_id[i] << endl;
+    reverse(endOrder.begin(), endOrder.end());
+    vector<int> sccGroup(numV);
 
+    for (int i = 0; i < visited.size(); i++){
+        visited[i] = false;
+    }
+
+    for (int i = 0; i < endOrder.size(); i++){
+        int currV = endOrder[i];
+        if (!visited[currV]){
+            vector<int> currSCC;
+            dfsFlipped(currV, flippedGraph, visited, currSCC);
+            int smallestV = *min_element(currSCC.begin(), currSCC.end());
+            for (int j = 0; j < currSCC.size(); j++){
+                int v = currSCC[j];
+                sccGroup[v] = smallestV;
+            }
+        }
+    }
+
+    for (int i = 0; i < numV; i++){
+        cout << sccGroup[i] << endl;
+    }
     return 0;
 }
+
